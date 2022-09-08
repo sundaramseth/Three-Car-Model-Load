@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang=”en”>
+<head>    
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My First three.js Project</title>
+    <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+    <script async src="https://unpkg.com/es-module-shims@1.3.6/dist/es-module-shims.js"></script>
+
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://unpkg.com/three@0.144.0/build/three.module.js"
+        }
+      }
+    </script>
+    <script type="module" >
+import * as THREE from 'three';
+
+import { OrbitControls } from '/three/examples/jsm/controls/OrbitControls.js';
+import { GLTFLoader } from '/three/examples/jsm/loaders/GLTFLoader.js';
+import { RGBELoader } from '/three/examples/jsm/loaders/RGBELoader.js';
+
+        //Scene
+        const scene = new THREE.Scene();
+        //Camera
+        const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+        // Renderer
+        const renderer = new THREE.WebGLRenderer({antialias: true});
+
+        renderer.setClearColor("#233143");
+        
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        
+        document.body.appendChild(renderer.domElement);
+
+        const controls = new OrbitControls( camera, renderer.domElement );
+        
+        // Make Canvas Responsive
+        window.addEventListener('resize', () => {
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        })
+
+
+        camera.position.set(2,3,3)
+
+        const material = new THREE.MeshStandardMaterial();
+        const loader = new GLTFLoader();
+
+        loader.load( 'assets/Car.glb', function ( gltf ) {
+
+            const scene1 = gltf.scene;
+        
+            scene1.traverse( function ( child ) {
+
+            if ( child.isMesh ) {
+
+                console.log(child);
+
+            }});
+
+            scene.add(scene1);
+
+        });
+
+        // Animate
+        function animate() {
+            requestAnimationFrame( animate );
+            renderer.render( scene, camera );
+        };
+
+        animate();
+
+    </script>
+
+</body>
+</html>
