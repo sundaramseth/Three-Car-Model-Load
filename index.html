@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang=”en”>
+<html lang="en">
 <head>    
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -8,6 +8,9 @@
     <link rel="stylesheet" href="css/main.css">
 </head>
 <body>
+ 
+    <div class="colorPicker" style="text-align: center;"><input id="body-color" type="color" value="#ff0000"></input><br/>Body</div>
+
     <script async src="https://unpkg.com/es-module-shims@1.3.6/dist/es-module-shims.js"></script>
 
     <script type="importmap">
@@ -23,55 +26,185 @@ import * as THREE from 'three';
 import { OrbitControls } from '/three/examples/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from '/three/examples/jsm/loaders/GLTFLoader.js';
 import { RGBELoader } from '/three/examples/jsm/loaders/RGBELoader.js';
+import { HDRCubeTextureLoader } from '/three/examples/jsm/loaders/HDRCubeTextureLoader.js';
+import  Stats  from '/three/examples/jsm/libs/stats.module.js';
+
+
+
+
+
 
         //Scene
         const scene = new THREE.Scene();
         //Camera
         const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+        camera.position.set(2,2,2);
         // Renderer
         const renderer = new THREE.WebGLRenderer({antialias: true});
 
-        renderer.setClearColor("#233143");
+        renderer.setClearColor("#c9c9c9");
         
         renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+				renderer.toneMappingExposure = 3; // increase env light
         
         document.body.appendChild(renderer.domElement);
 
-        const controls = new OrbitControls( camera, renderer.domElement );
-        
+
+
         // Make Canvas Responsive
         window.addEventListener('resize', () => {
+        renderer.physicallyCorrectLights = true
+        renderer.shadowMap.enabled = true
+        renderer.outputEncoding = THREE.sRGBEncoding
         renderer.setSize(window.innerWidth, window.innerHeight);
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
         })
+       // User Controls 
+        const controls = new OrbitControls( camera, renderer.domElement );
+        controls.listenToKeyEvents( window ); // optional
+
+//controls.addEventListener( 'change', render ); // call this only in static scenes (i.e., if there is no animation loop)
+
+controls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
+controls.dampingFactor = 0.05;
+
+controls.screenSpacePanning = false;
+
+controls.maxPolarAngle = Math.PI / 2;
+        
+       // Light
+  	// LIGHTS
 
 
-        camera.position.set(2,3,3)
 
-        const material = new THREE.MeshStandardMaterial();
+     	// materials
+      
+      //Car Body
+
+      new HDRCubeTextureLoader()
+					.setPath( 'assets/env/' )
+					.load( [ 'px.hdr', 'nx.hdr', 'py.hdr', 'ny.hdr', 'pz.hdr', 'nz.hdr' ],
+						function ( texture ) {
+
+				const textureLoader = new THREE.TextureLoader();
+				const aoMap = textureLoader.load( 'assets/ex.png' );
+
+
+
+				const bodyMaterial = new THREE.MeshPhysicalMaterial( {
+          color:0x000000,
+
+          clearcoat: 1.0,
+								clearcoatRoughness: 0.1,
+								metalness: 0.9,
+								roughness: 0.5,
+			
+                aoMap: aoMap,
+					aoMapIntensity: 1,
+						
+		
+				} );
+
+				const bodyColorInput = document.getElementById( 'body-color' );
+				bodyColorInput.addEventListener( 'input', function () {
+
+					bodyMaterial.setHex(this.value);
+
+				} );
+
+
+        // Car Steel Parts
+				const detailsMaterial = new THREE.MeshPhysicalMaterial( {
+					color: 0xffffff, metalness: 1.0, roughness: 0.5
+				} );
+       
+        // Car Glass
+        const glassMaterial = new THREE.MeshPhysicalMaterial( {
+					color: 0x545454, metalness: 0.25, roughness: 0, transmission: 1.0, 
+				} );
+
+        //Car Plastic Items
+
+        const fiberMaterial = new THREE.MeshPhysicalMaterial({
+                roughness: 0.5,
+								clearcoat: 1.0,
+								clearcoatRoughness: 0.1,
+                color:0x171717,
+			
+						
+        })
+
+        const fiberMaterial2 = new THREE.MeshPhysicalMaterial({
+          color:0x171717, metalness: 0.0, roughness: .8
+        })
+
+        const fiberMaterial3 = new THREE.MeshPhysicalMaterial({
+          color:0x5c5c5c, metalness: 0.0, roughness: 1, flatShading:true, })
+
+        const silverMaterial = new THREE.MeshPhysicalMaterial({
+          color:0xc2c2c2, metalness: 1, roughness: .5, reflectivity:0,
+        })
+
+        const secondBodyMaterial = new THREE.MeshPhysicalMaterial( {
+					color: 0xc2c2c2,  metalness: 0.5, roughness: .6, reflectivity:0,
+				} );
+
+        const numberplateMaterial = new THREE.MeshPhysicalMaterial( {
+					color: 0xffffff, metalness: 0.5, roughness: 0.8, reflectivity:0.5,
+				} );
+       
+        
+
+        // 3D model loader
         const loader = new GLTFLoader();
 
         loader.load( 'assets/Car.glb', function ( gltf ) {
 
-            const scene1 = gltf.scene;
+ 
+            const model = gltf.scene;
+            console.log(model);
+            model.getObjectByName('HYUNDAI_CRETA_EX_CARBODY_MESH_1').material =  bodyMaterial; // Car Body
+            
+            model.getObjectByName('HYUNDAI_CRETA_EX_CARBODY_MESH_2').material = secondBodyMaterial; // Car second body
+            model.getObjectByName('HYUNDAI_CRETA_EX_CARBODY_MESH_3').material = fiberMaterial; // car body borders
+            model.getObjectByName('HYUNDAI_CRETA_EX_CARBODY_MESH_4').material = fiberMaterial2; // front and back mirror side border
+            model.getObjectByName('HYUNDAI_CRETA_EX_CARBODY_MESH_5').material.color.setHex(0x000000); // Car Inner body
+            model.getObjectByName('HYUNDAI_CRETA_EX_CARBODY_MESH_6').material.color.setHex(0xc2c2c2); // Car silencer
+            model.getObjectByName('HYUNDAI_CRETA_EX_CARBODY_MESH_7').material = detailsMaterial; // car handel, logo back front, front borde steel
+            model.getObjectByName('HYUNDAI_CRETA_EX_CARBODY_MESH_8').material = glassMaterial; //wind shield
+            model.getObjectByName('HYUNDAI_CRETA_EX_CARBODY_MESH_9').material.color.setHex(0xffd500); // side mirror indicator
+            model.getObjectByName('HYUNDAI_CRETA_EX_CARBODY_MESH_10').material = fiberMaterial3; // sidemirror indicator cover
+            model.getObjectByName('HYUNDAI_CRETA_EX_CARBODY_MESH_11').material.color.setHex(0xffffff); // side mirror
+            model.getObjectByName('HYUNDAI_CRETA_EX_CARBODY_MESH_12').material.color.setHex(0x000000); // backwidow mirror lines
+            model.getObjectByName('HYUNDAI_CRETA_EX_CARBODY_MESH_13').material = silverMaterial; // Side mirror upper design
+            model.getObjectByName('HYUNDAI_CRETA_EX_CARBODY_MESH_14').material = numberplateMaterial; // number plate
         
-            scene1.traverse( function ( child ) {
+          model.traverse( function ( child ) {
 
             if ( child.isMesh ) {
-
-                console.log(child);
-
+              console.log(child)
+//              child.getObjectByName('HYUNDAI_CRETA_EX_CARBODY_MESH_1').material = bodyMaterial;
+           
             }});
 
-            scene.add(scene1);
+            scene.add(model);
 
         });
+      
+             scene.background = texture;
+							scene.environment = texture;
+            });
 
+            const stats = Stats();
+            document.body.appendChild(stats.dom);
         // Animate
         function animate() {
             requestAnimationFrame( animate );
+
             renderer.render( scene, camera );
+            stats.update();
         };
 
         animate();
