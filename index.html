@@ -9,7 +9,10 @@
 </head>
 <body>
  
-    <div class="colorPicker" style="text-align: center;"><input id="body-color" type="color" value="#ff0000"></input><br/>Body</div>
+    <div class="" style="text-align: center; background: transparent; background-color: transparent;">
+      <input id="body-color" type="color" value="#ff0000"></input>
+    <br> Change Body Color
+    </div>
 
     <script async src="https://unpkg.com/es-module-shims@1.3.6/dist/es-module-shims.js"></script>
 
@@ -29,11 +32,6 @@ import { RGBELoader } from '/three/examples/jsm/loaders/RGBELoader.js';
 import { HDRCubeTextureLoader } from '/three/examples/jsm/loaders/HDRCubeTextureLoader.js';
 import  Stats  from '/three/examples/jsm/libs/stats.module.js';
 
-
-
-
-
-
         //Scene
         const scene = new THREE.Scene();
         //Camera
@@ -42,11 +40,12 @@ import  Stats  from '/three/examples/jsm/libs/stats.module.js';
         // Renderer
         const renderer = new THREE.WebGLRenderer({antialias: true});
 
-        renderer.setClearColor("#c9c9c9");
+        renderer.setClearColor("#ffffff");
         
         renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.toneMapping = THREE.ACESFilmicToneMapping;
-				renderer.toneMappingExposure = 3; // increase env light
+        renderer.outputEncoding = THREE.sRGBEncoding;
+        renderer.toneMapping = THREE.CineonToneMapping;
+				renderer.toneMappingExposure = 1; // increase env light
         
         document.body.appendChild(renderer.domElement);
 
@@ -68,11 +67,14 @@ import  Stats  from '/three/examples/jsm/libs/stats.module.js';
 //controls.addEventListener( 'change', render ); // call this only in static scenes (i.e., if there is no animation loop)
 
 controls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
-controls.dampingFactor = 0.05;
+controls.dampingFactor = 0.1;
 
 controls.screenSpacePanning = false;
 
 controls.maxPolarAngle = Math.PI / 2;
+
+// light
+
         
        // Light
   	// LIGHTS
@@ -89,20 +91,22 @@ controls.maxPolarAngle = Math.PI / 2;
 						function ( texture ) {
 
 				const textureLoader = new THREE.TextureLoader();
-				const aoMap = textureLoader.load( 'assets/ex.png' );
+				const aoMap2 = textureLoader.load( 'assets/ex.png' );
 
 
 
 				const bodyMaterial = new THREE.MeshPhysicalMaterial( {
+      
           color:0x000000,
-
           clearcoat: 1.0,
-								clearcoatRoughness: 0.1,
-								metalness: 0.9,
-								roughness: 0.5,
-			
-                aoMap: aoMap,
-					aoMapIntensity: 1,
+          clearcoatRoughness: 0.03, 
+          sheen: 0.5,
+          metalness: 0.9,
+          roughness: 1,
+          reflectivity:.3,
+
+          aoMap: aoMap2,
+        aoMapIntensity: .3,
 						
 		
 				} );
@@ -110,7 +114,9 @@ controls.maxPolarAngle = Math.PI / 2;
 				const bodyColorInput = document.getElementById( 'body-color' );
 				bodyColorInput.addEventListener( 'input', function () {
 
-					bodyMaterial.setHex(this.value);
+          console.log(this.value);
+
+					bodyMaterial.color.set(this.value);
 
 				} );
 
@@ -122,7 +128,7 @@ controls.maxPolarAngle = Math.PI / 2;
        
         // Car Glass
         const glassMaterial = new THREE.MeshPhysicalMaterial( {
-					color: 0x545454, metalness: 0.25, roughness: 0, transmission: 1.0, 
+					color: 0x545454, metalness: 0.25, roughness: 0, transmission: .8, 
 				} );
 
         //Car Plastic Items
@@ -154,6 +160,10 @@ controls.maxPolarAngle = Math.PI / 2;
         const numberplateMaterial = new THREE.MeshPhysicalMaterial( {
 					color: 0xffffff, metalness: 0.5, roughness: 0.8, reflectivity:0.5,
 				} );
+
+        const indicatorLight = new THREE.MeshStandardMaterial({
+          color:0xfbfff0, exposure:1, bloomThreshold:0, bloomStrength:3,bloomRadius:0.2
+        })
        
         
 
@@ -174,7 +184,7 @@ controls.maxPolarAngle = Math.PI / 2;
             model.getObjectByName('HYUNDAI_CRETA_EX_CARBODY_MESH_6').material.color.setHex(0xc2c2c2); // Car silencer
             model.getObjectByName('HYUNDAI_CRETA_EX_CARBODY_MESH_7').material = detailsMaterial; // car handel, logo back front, front borde steel
             model.getObjectByName('HYUNDAI_CRETA_EX_CARBODY_MESH_8').material = glassMaterial; //wind shield
-            model.getObjectByName('HYUNDAI_CRETA_EX_CARBODY_MESH_9').material.color.setHex(0xffd500); // side mirror indicator
+            model.getObjectByName('HYUNDAI_CRETA_EX_CARBODY_MESH_9').material = indicatorLight; // side mirror indicator
             model.getObjectByName('HYUNDAI_CRETA_EX_CARBODY_MESH_10').material = fiberMaterial3; // sidemirror indicator cover
             model.getObjectByName('HYUNDAI_CRETA_EX_CARBODY_MESH_11').material.color.setHex(0xffffff); // side mirror
             model.getObjectByName('HYUNDAI_CRETA_EX_CARBODY_MESH_12').material.color.setHex(0x000000); // backwidow mirror lines
@@ -189,11 +199,13 @@ controls.maxPolarAngle = Math.PI / 2;
            
             }});
 
+      
             scene.add(model);
+
 
         });
       
-             scene.background = texture;
+              scene.background = texture;
 							scene.environment = texture;
             });
 
