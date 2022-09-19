@@ -31,7 +31,7 @@
 
       <span id="color"><input id="body-color" type="color" value="#ff0000"></input></span>
 
-      <div class="seat" id="interior">
+      <div class="seat" id="interior" style="cursor: pointer;">
         <span class="text-align:center">
           <img width="35" src="https://img.icons8.com/external-icongeek26-linear-colour-icongeek26/64/000000/external-Seat-car-parts-icongeek26-linear-colour-icongeek26.png"/>
         </span>
@@ -39,7 +39,7 @@
         <span id="text">Interior</span>
        </div>
 
-       <div class="seat" id="exterior" style="display:none;">
+       <div class="seat" id="exterior" style="display:none;cursor: pointer;">
         <span class="text-align:center">
           <img width="35" src="https://img.icons8.com/avantgarde/100/000000/car.png"/>       </span>
         <br>
@@ -120,6 +120,8 @@ document.getElementById("interior").style.display = "none";
 
 camera.position.set(0,1.5,0);
 controls.target.set(0,1,0);
+camera.enableZoom = true;
+controls.update();
 
 }
 
@@ -133,6 +135,7 @@ document.getElementById("exterior").style.display = "none";
 // Create cube camera
 camera.position.set(2,2,2);
 controls.target.set(0,0,0);
+controls.update();
 
 }
 
@@ -266,6 +269,7 @@ controls.target.set(0,0,0);
         // Animate
         function animate() {
             requestAnimationFrame( animate );
+            controls.update();
 
             renderer.render( scene, camera );
             stats.update();
